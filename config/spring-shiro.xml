@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN"
+        "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<beans>
+	<!-- web.xml中shiro的filter对应的bean -->
+	<!-- Shiro 的Web过滤器 -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		<!-- loginUrl认证提交地址，如果没有认证将会请求此地址进行认证，请求此地址将由formAuthenticationFilter进行表单认证 -->
+		<property name="loginUrl" value="/login.html" />
+		<!-- 认证成功统一跳转到index.html，建议不配置，shiro认证成功自动到上一个请求路径 -->
+		<!-- <property name="successUrl" value="/index.html" /> -->
+		<!-- 通过unauthorizedUrl指定没有权限操作时跳转页面 -->
+		<property name="unauthorizedUrl" value="/refuse.html" />
+		<!-- 自定义filter配置 -->
+		<property name="filters">
+			<map>
+				<!-- 将自定义 的FormAuthenticationFilter注入shiroFilter中 -->
+				<entry key="authc" value-ref="formAuthenticationFilter" />
+			</map>
+		</property>
+		
+		<!-- 过滤器简称	对应的java类
+		anon	org.apache.shiro.web.filter.authc.AnonymousFilter
+		authc	org.apache.shiro.web.filter.authc.FormAuthenticationFilter
+		authcBasic	org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter
+		perms	org.apache.shiro.web.filter.authz.PermissionsAuthorizationFilter
+		port	org.apache.shiro.web.filter.authz.PortFilter
+		rest	org.apache.shiro.web.filter.authz.HttpMethodPermissionFilter
+		roles	org.apache.shiro.web.filter.authz.RolesAuthorizationFilter
+		ssl	org.apache.shiro.web.filter.authz.SslFilter
+		user	org.apache.shiro.web.filter.authc.UserFilter
+		logout	org.apache.shiro.web.filter.authc.LogoutFilter
+		
+		anon:例子/admins/**=anon 没有参数，表示可以匿名使用。
+		authc:例如/admins/user/**=authc表示需要认证(登录)才能使用，FormAuthenticationFilter是表单认证，没有参数 
+		roles：例子/admins/user/**=roles[admin],参数可以写多个，多个时必须加上引号，并且参数之间用逗号分割，当有多个参数时，例如admins/user/**=roles["admin,guest"],每个参数通过才算通过，相当于hasAllRoles()方法。
+		perms：例子/admins/user/**=perms[user:add:*],参数可以写多个，多个时必须加上引号，并且参数之间用逗号分割，例如/admins/user/**=perms["user:add:*,user:modify:*"]，当有多个参数时必须每个参数都通过才通过，想当于isPermitedAll()方法。
+		rest：例子/admins/user/**=rest[user],根据请求的方法，相当于/admins/user/**=perms[user:method] ,其中method为post，get，delete等。
+		port：例子/admins/user/**=port[8081],当请求的url的端口不是8081是跳转到schemal://serverName:8081?queryString,其中schmal是协议http或https等，serverName是你访问的host,8081是url配置里port的端口，queryString
+		是你访问的url里的？后面的参数。
+		authcBasic：例如/admins/user/**=authcBasic没有参数表示httpBasic认证
+		ssl:例子/admins/user/**=ssl没有参数，表示安全的url请求，协议为https
+		user:例如/admins/user/**=user没有参数表示必须存在用户, 身份认证通过或通过记住我认证通过的可以访问，当登入操作时不做检查
+		注：
+		anon，authcBasic，auchc，user是认证过滤器，
+		perms，roles，ssl，rest，port是授权过滤器
+		 -->
+		<!-- 过虑器链定义，从上向下顺序执行，一般将/**放在最下边 -->
+		<property name="filterChainDefinitions">
+			<value>
+				<!-- 对静态资源设置匿名访问 -->
+				/weblib/** = anon
+				<!-- 可匿名访问的页面 -->
+				/vcode.jpg = anon
+				/404.html = anon
+				/500.html = anon
+				/error.html = anon
+				/user/registerPage1.html = anon
+				/user/registerPage2.html = anon
+				/area.html = anon
+				/areaTree.html = anon
+				/user/register1.html = anon
+				/user/register2.html = anon
+				/ = anon
+				/index.html = anon
+				/news/newsDetail.html = anon
+				/druid/** = anon
+				/doc/** = anon
+				<!-- 请求 logout.html地址，shiro去清除session -->
+				/logout.html = logout
+				<!-- 权限 ，取消url拦截配置，使用注解授权方式 -->
+				<!-- /items/queryItems.action = perms[item:query] /items/editItems.action = perms[item:edit] -->
+				<!-- 配置记住我或认证通过可以访问的地址 -->
+				
+				<!-- /** = authc 所有url都必须认证通过才可以访问 -->
+				/** = authc
+				<!-- /** = anon所有url都可以匿名访问 -->
+			</value>
+		</property>
+	</bean>
+
+	<!-- securityManager安全管理器 -->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="realm" ref="customRealm" />
+		<!-- 记住我 -->
+		<property name="rememberMeManager" ref="rememberMeManager" />
+		<!-- 注入缓存管理器 -->
+		<!-- <property name="cacheManager" ref="cacheManager" /> -->
+		<!-- 注入session管理器 -->
+		<!-- <property name="sessionManager" ref="sessionManager" /> -->
+	</bean>
+
+	<!-- realm -->
+	<bean id="customRealm" class="com.qzw.shiro.CustomRealm">
+		<!-- 将凭证匹配器设置到realm中，realm按照凭证匹配器的要求进行散列 -->
+		<property name="credentialsMatcher" ref="credentialsMatcher" />
+	</bean>
+
+	<!-- 凭证匹配器 -->
+	<bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+		<property name="hashAlgorithmName" value="SHA-512" />
+		<property name="hashIterations" value="2" />
+		<property name="storedCredentialsHexEncoded" value="true" />
+	</bean>
+
+	<!-- 缓存管理器 -->
+	<!-- <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager"> <property name="cacheManagerConfigFile" value="classpath:shiro-ehcache.xml" /> </bean> -->
+
+	<!-- 会话管理器 -->
+	<!-- <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+		session的失效时长，单位毫秒
+		<property name="globalSessionTimeout" value="600000" />
+		删除失效的session
+		<property name="deleteInvalidSessions" value="true" />
+	</bean> -->
+
+	<!-- 自定义form认证过虑器 -->
+	<!-- 基于Form表单的身份验证过滤器，不配置将也会注册此过虑器，表单中的用户账号、密码及loginurl将采用默认值，建议配置 -->
+	<bean id="formAuthenticationFilter" class="com.qzw.shiro.CustomFormAuthenticationFilter ">
+		<!-- 表单中账号的input名称 -->
+		<property name="usernameParam" value="username" />
+		<!-- 表单中密码的input名称 -->
+		<property name="passwordParam" value="password" />
+		<!-- 记住我input的名称 -->
+		<property name="rememberMeParam" value="rememberMe" />
+	</bean>
+
+	<!-- rememberMeManager管理器，写cookie，取出cookie生成用户信息 -->
+	<bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+		<property name="cookie" ref="rememberMeCookie" />
+	</bean>
+
+	<!-- 记住我cookie -->
+	<bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+		<!-- rememberMe是cookie的名字 -->
+		<constructor-arg value="rememberMe" />
+		<!-- 记住我cookie生效时间30天 -->
+		<property name="maxAge" value="2592000" />
+	</bean>
+
+	<!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+	<!-- <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/> -->
+
+	<!-- 开启Shiro的注解(如@RequiresRoles,@RequiresPermissions),需借助SpringAOP扫描使用Shiro注解的类,并在必要时进行安全逻辑验证 -->
+	<!-- 配置以下两个bean即可实现此功能 -->
+	<!-- <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" depends-on="lifecycleBeanPostProcessor"/> <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor"> <property name="securityManager" ref="securityManager"/> </bean> -->
+</beans>

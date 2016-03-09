@@ -1,0 +1,59 @@
+@charset "UTF-8";
+/* 引入bootstrp的样式 */
+@import url("css/bootstrap.min.css");
+/* 引入animate的样式 */
+@import url("css/animate.css");
+/* 引入bootstrp的主题样式 */
+@import url("css/bootstrap-theme.min.css");
+/* 引入font-awesome的主题样式 */
+@import url("css/font-awesome.min.css");
+/* 引入bootstrapvalidator的样式 */
+@import url("lib/bootstrapvalidator/css/bootstrapValidator.min.css");
+/* 引入bootstrap-switch的主题样式 */
+@import url("lib/icheck-1.x/skins/flat/blue.css");
+/* 引入zTree_v3的主题样式 */
+@import url("lib/zTree_v3/css/zTreeStyle/zTreeStyle.css");
+/* 引入selectator的主题样式 */
+@import url("lib/selectator/fm.selectator.jquery.css");
+/* 引入bootstrap-modal的主题样式 */
+@import url("lib/bootstrap-modal/css/bootstrap-modal.css");
+/* 引入bootstrap-modal的主题样式 */
+@import url("lib/bootstrap-modal/css/bootstrap-modal-bs3patch.css");
+/* 引入bootstrap-table的主题样式 */
+@import url("lib/bootstrap-table/bootstrap-table.min.css");
+
+/* ---------------------自定义主题样式--------------------- */
+html, body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+#mainBody {
+	background-image: url(./img/main-bg.png);
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	padding-top: 70px;
+}
+
+#container {
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+}
+
+#page {
+	padding-bottom: 30px; /*高度等于footer的高度*/
+}
+
+#footer {
+	position: relative;
+	margin-top: -30px; /*等于footer的高度*/
+	height: 30px;
+	clear: both;
+	background: #333;
+}
+
+#footer p {
+	color: white
+}

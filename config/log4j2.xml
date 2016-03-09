@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configuration后面的status，这个用于设置log4j2自身内部的信息输出，可以不设置，当设置成trace时，你会看到log4j2内部各种详细输出 -->
+<!-- 级别： all<trace<debug<info<warn<error<fatal<off -->
+<configuration status="off" monitorInterval="60">
+	<properties>
+		<property name="LOG_HOME">log</property>
+		<!-- 日志备份目录 -->
+		<property name="BACKUP_HOME">{LOG_HOME}/backup</property>
+	</properties>
+	<!--先定义所有的appender -->
+	<appenders>
+		<!--这个输出控制台的配置 -->
+		<Console name="consoleOut" target="SYSTEM_OUT">
+			<!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch） -->
+			<!-- <ThresholdFilter level="debug" /> -->
+			<!--输出日志的格式 -->
+			<PatternLayout pattern="%highlight{[%d{HH:mm:ss.SSS}] %p %c{9.9.~} %M --- %m %xEx %n}{STYLE=Logback}" />
+		</Console>
+		<!--文件会打印出所有信息，这个log每次运行程序会自动清空，由append属性决定，这个也挺有用的，适合临时测试用 -->
+		<File name="file" fileName="${LOG_HOME}/test.log" append="false">
+			<PatternLayout pattern="[%d{DEFAULT}] %p %l --- %m %xEx %n" />
+		</File>
+		<!--这个会打印出所有的信息，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档 -->
+		<!-- 初始日志名称是rolling.log，当rolling.log日志文件达到1MB时，将rolling.log修改为app-日期-1.log并压缩为app-日期-1.log.gz，rolling.log重新开始写 -->
+		<RollingFile name="rollingFile" fileName="${LOG_HOME}/app.log" filePattern="log/$${date:yyyy-MM}/app-%d{yyyy-MM-dd}-%i.log.gz">
+			<PatternLayout pattern="[%d{DEFAULT}] %p %l --- %m %xEx %n" />
+			<SizeBasedTriggeringPolicy size="1MB" />
+		</RollingFile>
+		<!--在控制台输出Sql的配置 -->
+		<Console name="consoleSqlOut" target="SYSTEM_OUT">
+			<!--输出日志的格式 -->
+			<PatternLayout pattern="[%d{HH:mm:ss.SSS}] %p : %m %xEx %n" />
+		</Console>
+	</appenders>
+	<!--然后定义logger，只有定义了logger并引入的appender，appender才会生效 -->
+	<loggers>
+		<!-- <logger name="druid.sql" level="trace" />
+		<logger name="druid.sql.DataSource" level="trace" />
+		<logger name="druid.sql.Connection" level="trace" /> -->
+		<logger name="druid.sql.Statement" level="debug" additivity="false">
+			<appender-ref ref="consoleSqlOut" />
+		</logger>
+		<!-- <logger name="druid.sql.ResultSet" level="debug" additivity="false">
+			<appender-ref ref="consoleSqlOut" />
+		</logger> -->
+		<!--建立一个默认的root的logger -->
+		<root level="info">
+			<appender-ref ref="consoleOut" />
+			<!-- <appender-ref ref="file" /> <appender-ref ref="rollingFile" /> -->
+		</root>
+	</loggers>
+</configuration>

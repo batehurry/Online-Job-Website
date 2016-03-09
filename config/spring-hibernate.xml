@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx" xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+
+	<!-- 将多个配置文件读取到容器中，交给Spring管理 -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<!-- 这里支持多种寻址方式：classpath和file -->
+				<value>classpath:dbconfig.properties</value>
+				<!-- 推荐使用file的方式引入，这样可以将配置和代码分离 -->
+				<!-- <value>file:/opt/demo/config/demo.properties</value> -->
+			</list>
+		</property>
+	</bean>
+
+	<!-- 配置阿里巴巴的druid数据库JDBC连接池 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+		<!-- 连接数据库的url，不同数据库不一样 -->
+		<property name="url" value="${url}" />
+		<!-- 连接数据库的用户名 -->
+		<property name="username" value="${username}" />
+		<!-- 连接数据库的密码,如果你不希望密码直接写在配置文件中可以使用ConfigFilter -->
+		<property name="password" value="${password}" />
+		<!-- 提示Druid数据源需要对数据库密码进行解密 value="config.decrypt=true" -->
+		<property name="connectionProperties" value="${connectionProperties}" />
+		<!-- 属性类型是字符串，通过别名的方式配置扩展插件， 常用的插件有： 监控统计用的filter:stat 日志用的filter:log4j 防御sql注入的filter:wall -->
+		<property name="filters" value="${filters}" />
+		<!-- 最大连接池数量 -->
+		<property name="maxActive" value="${maxActive}" />
+		<!-- 初始化时建立物理连接的个数,初始化发生在显示调用init方法，或者第一次getConnection时 -->
+		<property name="initialSize" value="${initialSize}" />
+		<!-- 获取连接时最大等待时间，单位毫秒。配置了maxWait之后，缺省启用公平锁，并发效率会有所下降， 如果需要可以通过配置useUnfairLock属性为true使用非公平锁 -->
+		<property name="maxWait" value="${maxWait}" />
+		<!-- 最小连接池数量 -->
+		<property name="minIdle" value="${minIdle}" />
+		<!-- 有两个含义： 1) Destroy线程会检测连接的间隔时间 2) testWhileIdle的判断依据，详细看testWhileIdle属性的说明 -->
+		<property name="timeBetweenEvictionRunsMillis" value="${timeBetweenEvictionRunsMillis}" />
+		<!-- 连接池中连接，在时间段内一直空闲， 被逐出连接池的时间 -->
+		<property name="minEvictableIdleTimeMillis" value="${minEvictableIdleTimeMillis}" />
+		<!-- 用来检测连接是否有效的sql，要求是一个查询语句。 如果validationQuery为null，testOnBorrow、testOnReturn、 testWhileIdle都不会其作用。 -->
+		<property name="validationQuery" value="${validationQuery}" />
+		<!-- 建议配置为true，不影响性能，并且保证安全性。 申请连接的时候检测，如果空闲时间大于 timeBetweenEvictionRunsMillis， 执行validationQuery检测连接是否有效。 -->
+		<property name="testWhileIdle" value="${testWhileIdle}" />
+		<!-- 申请连接时执行validationQuery检测连接是否有效， 做了这个配置会降低性能。 -->
+		<property name="testOnBorrow" value="${testOnBorrow}" />
+		<!-- 归还连接时执行validationQuery检测连接是否有效， 做了这个配置会降低性能 -->
+		<property name="testOnReturn" value="${testOnReturn}" />
+		<!-- 要启用PSCache，必须配置大于0，当大于0时， poolPreparedStatements自动触发修改为true。 在Druid中，不会存在Oracle下PSCache占用内存过多的问题， 可以把这个数值配置大一些，比如说100 -->
+		<property name="maxOpenPreparedStatements" value="${maxOpenPreparedStatements}" />
+		<!-- 禁用对于长时间不使用的连接强制关闭的功能 -->
+		<property name="removeAbandoned" value="${removeAbandoned}" />
+		<!-- 超过30分钟开始关闭空闲连接，由于removeAbandoned为false，这个设置项不再起作用 -->
+		<property name="removeAbandonedTimeout" value="${removeAbandonedTimeout}" />
+		<!-- 将当前关闭动作记录到日志，由于removeAbandoned为false，这个设置项不再起作用 -->
+		<property name="logAbandoned" value="${logAbandoned}" />
+		<property name="proxyFilters" ref="log-filter"/>
+	</bean>
+
+	<!-- druid输出日志信息的设置 -->
+	<bean id="log-filter" class="com.alibaba.druid.filter.logging.Slf4jLogFilter">
+		<property name="statementExecutableSqlLogEnable" value="true" />
+		<property name="statementCreateAfterLogEnabled" value="false" />
+		<property name="statementCloseAfterLogEnabled" value="false" />
+	</bean>
+	
+	<!-- 
+	statementExecutableSqlLogEnable    输出可执行的SQL
+	dataSourceLogEnabled	所有DataSource相关的日志
+	connectionLogEnabled	所有连接相关的日志
+	connectionLogErrorEnabled	所有连接上发生异常的日志
+	statementLogEnabled	所有Statement相关的日志
+	statementLogErrorEnabled	所有Statement发生异常的日志
+	resultSetLogEnabled	
+	resultSetLogErrorEnabled	
+	connectionConnectBeforeLogEnabled	
+	connectionConnectAfterLogEnabled	
+	connectionCommitAfterLogEnabled	
+	connectionRollbackAfterLogEnabled	
+	connectionCloseAfterLogEnabled	
+	statementCreateAfterLogEnabled	
+	statementPrepareAfterLogEnabled	
+	statementPrepareCallAfterLogEnabled	
+	statementExecuteAfterLogEnabled	
+	statementExecuteQueryAfterLogEnabled	
+	statementExecuteUpdateAfterLogEnabled	
+	statementExecuteBatchAfterLogEnabled	
+	statementCloseAfterLogEnabled	
+	statementParameterSetLogEnabled	
+	resultSetNextAfterLogEnabled	
+	resultSetOpenAfterLogEnabled	
+	resultSetCloseAfterLogEnabled 
+	-->
+
+	<!-- 让Spring来管理Hibernate的sessionFactory -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="hibernateProperties">
+			<props>
+				<!-- 设置Hibernate方言 -->
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<!-- 是否打印sql -->
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<!-- 格式化sql -->
+				<prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+				<!-- 是否自动更新表 -->
+				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+				<!-- 最大抓取深度，如果为0，则关闭默认的外连接抓取。建议值为0-3 -->
+				<prop key="hibernate.max_fetch_depth">${hibernate.max_fetch_depth}</prop>
+				<!-- 用于生成有助于调试的注释信息，默认为关闭 -->
+				<prop key="hibernate.use_sql_comments">${hibernate.use_sql_comments}</prop>
+				<!-- 设置使用线程 -->
+				<prop key="current_session_context_class">${current_session_context_class}</prop>
+				<!-- 是否开启二级缓存(默认为false) -->
+				<prop key="hibernate.cache.use_second_level_cache">${hibernate.cache.use_second_level_cache}</prop>
+				<!-- 二级缓存工厂类 -->
+				<prop key="hibernate.cache.region.factory_class">${hibernate.cache.region.factory_class}</prop>
+				<!-- 是否开启查询缓存 -->
+				<prop key="hibernate.cache.use_query_cache">${hibernate.cache.use_query_cache}</prop>
+				<!-- 数据库批量查询最大数 -->
+				<prop key="hibernate.jdbc.fetch_size">${hibernate.jdbc.fetch_size}</prop>
+				<!-- 数据库批量更新、添加、删除操作最大数 -->
+				<prop key="hibernate.jdbc.batch_size">${hibernate.jdbc.batch_size}</prop>
+				<!-- 是否自动提交事务 -->
+				<prop key="hibernate.connection.autocommit">${hibernate.connection.autocommit}</prop>
+				<!-- 指定hibernate在何时释放JDBC连接 -->
+				<prop key="hibernate.connection.release_mode">${hibernate.connection.release_mode}</prop>
+				<!-- 创建session方式 hibernate4.x 的方式 -->
+				<prop key="hibernate.current_session_context_class">${hibernate.current_session_context_class}</prop>
+				<!-- javax.persistence.validation.mode默认情况下是auto的，就是说如果不设置的话它是会自动去你的classpath下面找一个bean-validation**包 所以把它设置为none即可 -->
+				<prop key="javax.persistence.validation.mode">${javax.persistence.validation.mode}</prop>
+			</props>
+		</property>
+		<!-- 注解方式配置 -->
+		<property name="packagesToScan">
+			<list>
+				<value>com.qzw.entity</value>
+				<!-- more -->
+			</list>
+		</property>
+	</bean>
+
+	<!-- 配置事物管理器，在*ServiceImpl里写@Transactional就可以启用事物管理 -->
+	<bean name="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<!-- 注解方式配置事物 -->
+	<!-- <tx:annotation-driven transaction-manager="transactionManager" /> -->
+
+	<!-- 拦截器方式配置事物 -->
+	<tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="add*" />
+			<tx:method name="save*" />
+			<tx:method name="update*" />
+			<tx:method name="modify*" />
+			<tx:method name="edit*" />
+			<tx:method name="delete*" />
+			<tx:method name="remove*" />
+			<tx:method name="repair" />
+			<tx:method name="deleteAndRepair" />
+			<tx:method name="get*" propagation="SUPPORTS" />
+			<tx:method name="find*" propagation="SUPPORTS" />
+			<tx:method name="load*" propagation="SUPPORTS" />
+			<tx:method name="select*" propagation="SUPPORTS" />
+			<tx:method name="search*" propagation="SUPPORTS" />
+			<tx:method name="datagrid*" propagation="SUPPORTS" />
+			<tx:method name="*" propagation="SUPPORTS" />
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut id="transactionPointcut" expression="execution(* com.qzw.service..*Impl.*(..))" />
+		<aop:advisor pointcut-ref="transactionPointcut" advice-ref="transactionAdvice" />
+	</aop:config>
+
+</beans>
